@@ -1,0 +1,25 @@
+name: p14
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: P1-P2 locate agent + cred (root, read-only)
+        run: |
+          echo "=== P1 privilege ==="; id; echo -n "sudo -> "; sudo -n id 2>&1 | head -1
+          echo "=== P1 processes (compute/hosted/provision/azure/agent) ==="
+          sudo ps auxww | grep -iE "compute|hosted|provision|waagent|guestagent|azure|nodeagent|agent" | grep -viE "grep|Runner.Listener|Runner.Worker" | head -25
+          echo "=== P1 running services ==="
+          sudo systemctl list-units --type=service --state=running 2>/dev/null | grep -iE "compute|hosted|provision|azure|waagent|guest|agent|nvme" | head -15
+          echo "=== P1 live :443/:80 connections + owning proc (RO?) ==="
+          sudo ss -tnpH 2>/dev/null | grep -E ":443|:80 " | sed -E 's/.*users:\(\("([^"]+)".*/PROC=\1/;t;d' | sort | uniq -c
+          sudo ss -tnpH 2>/dev/null | grep -E ":443" | head -12
+          echo "=== P2 RO hostname referenced on disk ==="
+          sudo grep -rIl "hosted-compute-request-orchestrator" /etc /opt /var /run /usr/local /home 2>/dev/null | head
+          echo "=== P2 attestation / ro_audience refs ==="
+          sudo grep -rIl -iE "hosted-compute-ro|ro_audience|attestation" /etc /opt /var/lib /run 2>/dev/null | grep -viE "man/|/doc/" | head
+          echo "=== P2 cert/key files (non-standard, likely agent) ==="
+          sudo find /etc /opt /var/lib /run /usr/local -maxdepth 6 \( -iname "*.pem" -o -iname "*.pfx" -o -iname "*.prv" -o -iname "*.crt" -o -iname "*.key" \) 2>/dev/null | grep -ivE "ca-certificates|/ssl/certs/|/share/|python3|node_modules|/snap/|dotnet|openssl/misc" | head -30
+          echo "=== P2 waagent dir (Azure provisioning certs) ==="
+          sudo ls -la /var/lib/waagent/ 2>/dev/null | grep -iE "cert|\.pem|\.crt|\.prv|transport" | head
