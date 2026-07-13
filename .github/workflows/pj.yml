@@ -1,0 +1,22 @@
+name: pj
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: provjobd/abuse-override recon (safe, own VM)
+        run: |
+          echo "=== override file perms + content ==="
+          ls -la /opt/hca/provjobd_override.json 2>/dev/null
+          echo -n "writable by runner? "; [ -w /opt/hca/provjobd_override.json ] && echo "YES (runner can overwrite)" || echo "no"
+          echo "--- content ---"; cat /opt/hca/provjobd_override.json 2>/dev/null
+          echo "=== /opt/hca dir writable? (can drop/replace files root reads?) ==="
+          ls -ld /opt/hca; [ -w /opt/hca ] && echo "/opt/hca WRITABLE by runner" || echo "/opt/hca not writable"
+          echo "=== provjobd process (root?) + binary ==="
+          sudo ps -eo pid,user,args 2>/dev/null | grep -i provjobd | grep -v grep
+          PJ=$(sudo ls /tmp/provjobd* 2>/dev/null | head -1); echo "binary: $PJ"; sudo ls -la "$PJ" 2>/dev/null
+          echo "=== provjobd strings: what the override controls (abuse/mining/detect/disable/exec) ==="
+          sudo strings -n 6 "$PJ" 2>/dev/null | grep -iE "override|provjobd_override|abuse|trusttier|trust_tier|mining|miner|crypto|detect|disable|allowlist|/opt/hca|exec|command|terminate|kill|monitor" | sort -u | head -45
+          echo "=== agent strings: override schema fields ==="
+          strings -n 6 /opt/hca/hosted-compute-agent 2>/dev/null | grep -iaE "provjobd_override|abuseToolsOverride|trustTier|abuse.*override|override.*abuse" | sort -u | head -20
