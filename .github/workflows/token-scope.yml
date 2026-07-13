@@ -1,0 +1,24 @@
+name: token-scope
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: battery
+        env:
+          TOK: ${{ github.token }}
+        run: |
+          A="https://api.github.com"
+          p(){ c=$(curl -s -o /tmp/b -w "%{http_code}" -H "Authorization: Bearer $TOK" "$2"); echo "PROBE $1 :: $c :: $(head -c 90 /tmp/b | tr -d '\n')"; }
+          p self_read           "$A/repos/dobetz87/oidc-claims-probe"
+          p xrepo_priv_meta     "$A/repos/dobetz87/b2b"
+          p xrepo_priv_contents "$A/repos/dobetz87/b2b/contents/"
+          p xrepo_priv2         "$A/repos/dobetz87/wrmbaksih"
+          p user_ident          "$A/user"
+          p user_repos          "$A/user/repos?per_page=3"
+          p user_orgs           "$A/user/orgs"
+          p self_secrets        "$A/repos/dobetz87/oidc-claims-probe/actions/secrets"
+          echo -n "PROBE self_write(contents:read) :: "; curl -s -o /tmp/w -w "%{http_code}" -X PUT -H "Authorization: Bearer $TOK" "$A/repos/dobetz87/oidc-claims-probe/contents/escalate.txt" -d '{"message":"x","content":"eA=="}'; echo " :: $(head -c 90 /tmp/w|tr -d '\n')"
+          echo -n "PROBE add_collab :: "; curl -s -o /tmp/c -w "%{http_code}" -X PUT -H "Authorization: Bearer $TOK" "$A/repos/dobetz87/oidc-claims-probe/collaborators/dobetz87" -d '{"permission":"admin"}'; echo " :: $(head -c 90 /tmp/c|tr -d '\n')"
