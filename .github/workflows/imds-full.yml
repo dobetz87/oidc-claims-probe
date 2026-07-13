@@ -1,0 +1,18 @@
+name: imds-full
+on: workflow_dispatch
+permissions: {}
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "=== FULL instance metadata ==="
+          curl -s --max-time 6 -H "Metadata:true" "http://169.254.169.254/metadata/instance?api-version=2023-07-01" | python3 -m json.tool 2>/dev/null | grep -iE "subscriptionId|resourceGroup|resourceId|vmId|vmSize|sku|publisher|version|location|tags|zone|name|userData|customData" | head -40
+          echo "=== userData (base64) ==="
+          curl -s --max-time 6 -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text"; echo
+          echo "=== attested doc (signed - proves subscription) ==="
+          curl -s --max-time 6 -H "Metadata:true" "http://169.254.169.254/metadata/attested/document?api-version=2020-09-01" | head -c 120; echo
+          echo "=== identity endpoints enum ==="
+          curl -s --max-time 6 -H "Metadata:true" "http://169.254.169.254/metadata/identity/info?api-version=2018-02-01"; echo
+          echo "=== loadbalancer/network ==="
+          curl -s --max-time 6 -H "Metadata:true" "http://169.254.169.254/metadata/loadbalancer?api-version=2021-05-01" | head -c 200; echo
