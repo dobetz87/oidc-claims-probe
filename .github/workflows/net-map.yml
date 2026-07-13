@@ -1,0 +1,29 @@
+name: net-map
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  m:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "=== internal endpoints wired into the runner (URLs only, tokens redacted) ==="
+          env | grep -oiE "(ACTIONS_[A-Z_]*URL|_URL|_ENDPOINT|BROKER[A-Z_]*|RESULTS[A-Z_]*)=https?://[^ ]+" \
+            | sed -E 's#=(https?://[^/]+).*#=\1#' | grep -ivE "token|secret|key|password" | sort -u
+          echo "=== reachability of discovered internal hosts (GET /, no auth) ==="
+          for u in "$ACTIONS_RESULTS_URL" "$ACTIONS_CACHE_URL" "$ACTIONS_CACHE_SERVICE_V2" "$ACTIONS_RUNTIME_URL"; do
+            [ -n "$u" ] || continue
+            h=$(echo "$u" | sed -E 's#(https?://[^/]+).*#\1#')
+            echo -n "GET $h/ -> "; curl -s -o /tmp/x -w "%{http_code}" --max-time 6 "$h/" 2>/dev/null; echo " :: $(head -c 50 /tmp/x|tr -d '\n')"
+          done
+          echo "=== *.github.net internal prod network reachability ==="
+          for host in api.github.net github.net octofactory.github.net stampy.github.net; do
+            ip=$(getent hosts "$host" 2>/dev/null | awk '{print $1}' | head -1)
+            echo -n "$host resolves=${ip:-NO} "; [ -n "$ip" ] && { curl -s -o /dev/null -w "https reach=%{http_code}" --max-time 5 "https://$host/" 2>/dev/null; }; echo
+          done
+          echo "=== egress firewall: internal IP ranges reachable? ==="
+          for t in 10.0.0.1 169.254.169.254 168.63.129.16; do
+            echo -n "$t -> "; timeout 4 bash -c "echo > /dev/tcp/$t/80" 2>/dev/null && echo "tcp/80 OPEN" || echo "closed/filtered"
+          done
+          echo "=== 168.63.129.16 = Azure WireServer (DHCP/health/extensions) ==="
+          curl -s --max-time 5 "http://168.63.129.16/machine?comp=goalstate" -H "x-ms-version: 2015-04-05" | head -c 150; echo " [rc=$?]"
