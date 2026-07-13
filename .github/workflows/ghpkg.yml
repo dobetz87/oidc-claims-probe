@@ -1,0 +1,27 @@
+name: ghpkg
+on: workflow_dispatch
+permissions:
+  contents: read
+  packages: write
+jobs:
+  pub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', registry-url: 'https://npm.pkg.github.com', scope: '@dobetz87' }
+      - name: publish @dobetz87/pkgtest to GitHub Packages via GITHUB_TOKEN
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/g && cd /tmp/g
+          printf '{"name":"@dobetz87/pkgtest","version":"0.0.%s","publishConfig":{"registry":"https://npm.pkg.github.com"},"repository":"git+https://github.com/dobetz87/oidc-claims-probe.git"}\n' "${{ github.run_id }}" > package.json
+          echo "module.exports={};" > index.js
+          npm publish 2>&1 | tail -15
+      - name: observe package visibility + repo link (GITHUB_TOKEN view)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== GET /users/dobetz87/packages/npm/pkgtest ==="
+          curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/users/dobetz87/packages/npm/pkgtest" \
+            | python3 -c "import sys,json;d=json.load(sys.stdin);print('visibility=',d.get('visibility'),'repo=',(d.get('repository') or {}).get('full_name'),'name=',d.get('name'))" 2>/dev/null || echo "  (parse fail / not found)"
