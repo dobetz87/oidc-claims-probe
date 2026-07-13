@@ -1,11 +1,31 @@
 name: publish
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      envname:
+        description: "environment to publish under (p:q = protected, p%3Aq = unprotected twin)"
+        required: true
+        default: "p:q"
 permissions:
   id-token: write
   contents: read
 jobs:
-  call:
-    uses: ./.github/workflows/reusable-pub.yml
+  pub:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.envname }}
     permissions:
       id-token: write
       contents: read
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', registry-url: 'https://registry.npmjs.org' }
+      - run: npm install -g npm@latest
+      - name: mint OIDC (aud=npm), show sub + environment claim, then trusted-publish
+        run: |
+          T=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm")
+          echo "$T" | python3 -c "import sys,json,base64;v=json.load(sys.stdin)['value'].split('.')[1];v+='='*(-len(v)%4);c=json.loads(base64.urlsafe_b64decode(v));print('=== OIDC CLAIMS npm WILL SEE ===');print('sub        =',c.get('sub'));print('environment=',repr(c.get('environment')));print('repository =',c.get('repository'))"
+          mkdir -p /tmp/p
+          printf '{"name":"@dobetz/tp-probe","version":"0.2.%s","license":"MIT","repository":{"type":"git","url":"git+https://github.com/dobetz87/oidc-claims-probe.git"}}\n' "${{ github.run_id }}" > /tmp/p/package.json
+          echo "module.exports={};" > /tmp/p/index.js
+          echo "=== npm publish (OIDC trusted publishing; no NODE_AUTH_TOKEN) ==="
+          npm publish /tmp/p --access public 2>&1 | tail -25
