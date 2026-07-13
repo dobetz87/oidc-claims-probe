@@ -1,0 +1,110 @@
+name: oidc-cs
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  j0:
+    runs-on: ubuntu-latest
+    environment: "z?z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS q || $S"
+  j1:
+    runs-on: ubuntu-latest
+    environment: "z&z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS amp || $S"
+  j2:
+    runs-on: ubuntu-latest
+    environment: "z=z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS eq || $S"
+  j3:
+    runs-on: ubuntu-latest
+    environment: "z%z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS pct || $S"
+  j4:
+    runs-on: ubuntu-latest
+    environment: "z+z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS plus || $S"
+  j5:
+    runs-on: ubuntu-latest
+    environment: "z\"z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS dq || $S"
+  j6:
+    runs-on: ubuntu-latest
+    environment: "z<z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS lt || $S"
+  j7:
+    runs-on: ubuntu-latest
+    environment: "z>z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS gt || $S"
+  j8:
+    runs-on: ubuntu-latest
+    environment: "z|z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS pipe || $S"
+  j9:
+    runs-on: ubuntu-latest
+    environment: "z^z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS caret || $S"
+  j10:
+    runs-on: ubuntu-latest
+    environment: "z~z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS tilde || $S"
+  j11:
+    runs-on: ubuntu-latest
+    environment: "z*z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS star || $S"
+  j12:
+    runs-on: ubuntu-latest
+    environment: "z  z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS sp2 || $S"
+  j13:
+    runs-on: ubuntu-latest
+    environment: "z!z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS bang || $S"
+  j14:
+    runs-on: ubuntu-latest
+    environment: "z()z"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "CS paren || $S"
