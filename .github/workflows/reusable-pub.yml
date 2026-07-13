@@ -10,9 +10,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22', registry-url: 'https://registry.npmjs.org' }
       - run: npm install -g npm@latest
-      - name: ACTUAL npm publish runs HERE (reusable-pub.yml, NOT the configured publish.yml)
+      - name: ACTUAL publish in reusable-pub.yml (npm trusts publish.yml, the caller)
         run: |
           mkdir -p /tmp/p
-          echo '{"name":"@dobetz/tp-probe","version":"0.1.${{ github.run_id }}","license":"MIT"}' > /tmp/p/package.json
+          printf '{"name":"@dobetz/tp-probe","version":"0.1.%s","license":"MIT","repository":{"type":"git","url":"git+https://github.com/dobetz87/oidc-claims-probe.git"}}\n' "${{ github.run_id }}" > /tmp/p/package.json
           echo "module.exports={};" > /tmp/p/index.js
-          npm publish /tmp/p --access public 2>&1 | tail -22
+          npm publish /tmp/p --access public 2>&1 | tail -18
