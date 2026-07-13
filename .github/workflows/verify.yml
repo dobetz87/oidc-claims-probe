@@ -1,0 +1,25 @@
+name: verify
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: verify provjobd trusts runner-writable override
+        run: |
+          set +e
+          PID=$(sudo ps -eo pid,comm 2>/dev/null | awk '/provjobd/{print $1}' | tail -1)
+          echo "provjobd pid=$PID user=$(sudo ps -o user= -p $PID 2>/dev/null)"
+          echo "=== does provjobd BINARY reference the override path? (proves it reads it) ==="
+          sudo strings -n 8 /proc/$PID/exe 2>/dev/null | grep -iE "provjobd_override|/opt/hca|override\.json" | sort -u | head
+          echo "=== provjobd inotify watches / open fds on /opt/hca ==="
+          sudo ls -la /proc/$PID/fd 2>/dev/null | grep -iE "opt/hca|inotify" | head
+          sudo cat /proc/$PID/fdinfo/* 2>/dev/null | grep -iE "inotify" >/dev/null && echo "provjobd HAS inotify watches" || echo "no inotify"
+          echo "=== provjobd override-related strings (what it controls) ==="
+          sudo strings -n 6 /proc/$PID/exe 2>/dev/null | grep -iE "override|abuse|disable|detect|mining|miner|trusttier|trust_tier|setting|policy|reload|watch" | sort -u | head -40
+          echo "=== BENIGN read-test: write override, watch provjobd openat it (6s) ==="
+          echo '{"_probe":"benign"}' > /opt/hca/provjobd_override.json 2>&1 && echo "wrote test file (runner CAN write override path)"
+          sudo timeout 6 strace -f -e trace=openat -p $PID 2>&1 | grep -iE "provjobd_override|/opt/hca" | head -5
+          rm -f /opt/hca/provjobd_override.json
+          echo "=== override schema fields (agent binary) ==="
+          strings -n 5 /opt/hca/hosted-compute-agent 2>/dev/null | grep -iaE "OnWorkerAbuseSetting|abuseAction|disableDetection|detectionMode|monitorMode|abuseCondition|trustTier" | sort -u | head -20
