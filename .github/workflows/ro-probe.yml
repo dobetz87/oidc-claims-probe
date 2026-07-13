@@ -1,0 +1,25 @@
+name: ro-probe
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: reach internal orchestrator (read-only)
+        run: |
+          RO="https://hosted-compute-request-orchestrator-prod-eus-01.githubapp.com"
+          echo "=== reachability (no token) ==="
+          for path in "/" "/vm/v1" "/healthz" "/health" "/version"; do
+            code=$(curl -s -o /tmp/o -w "%{http_code}" --max-time 8 "$RO$path")
+            echo "GET $path -> $code :: $(head -c 80 /tmp/o | tr -d '\n')"
+          done
+          echo "=== mint OIDC for the RO audience ==="
+          TOK=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://hosted-compute-ro" | python3 -c "import sys,json;print(json.load(sys.stdin).get('value',''))")
+          echo "token len: ${#TOK}"
+          echo "$TOK" | cut -d. -f2 | python3 -c "import sys,base64,json;p=sys.stdin.read().strip();p+='='*(-len(p)%4);d=json.loads(base64.urlsafe_b64decode(p));print('aud:',d.get('aud'),'| sub:',d.get('sub'),'| iss:',d.get('iss'))" 2>/dev/null
+          echo "=== token acceptance at /vm/v1 (GET, read-only) ==="
+          code=$(curl -s -o /tmp/a -w "%{http_code}" --max-time 8 -H "Authorization: Bearer $TOK" "$RO/vm/v1")
+          echo "GET /vm/v1 (bearer) -> $code :: $(head -c 120 /tmp/a | tr -d '\n')"
+          echo "=== does it want a different header? probe OPTIONS + WWW-Authenticate ==="
+          curl -s -D - -o /dev/null --max-time 8 "$RO/vm/v1" | grep -iE "www-authenticate|server|x-|^HTTP" | head
