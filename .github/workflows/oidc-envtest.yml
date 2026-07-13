@@ -1,0 +1,21 @@
+name: oidc-envtest
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    environment: prodtest
+    steps: [{run: 'S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])"); echo "OIDCMARK a || $S"'}]
+  b:
+    runs-on: ubuntu-latest
+    environment: PRODTEST
+    steps: [{run: 'S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])"); echo "OIDCMARK b || $S"'}]
+  c:
+    runs-on: ubuntu-latest
+    environment: "col:on"
+    steps: [{run: 'S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])"); echo "OIDCMARK c || $S"'}]
+  d:
+    runs-on: ubuntu-latest
+    environment: "sp ace"
+    steps: [{run: 'S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])"); echo "OIDCMARK d || $S"'}]
