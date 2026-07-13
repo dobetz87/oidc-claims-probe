@@ -1,0 +1,21 @@
+name: enum
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fast enum (root)
+        run: |
+          echo "=== PRIV ==="; id; sudo -n id 2>&1 | head -1
+          echo "=== PROCESSES (full, non-kernel) ==="
+          sudo ps -eo user,pid,comm,args --sort=user 2>/dev/null | grep -vE "\[" | grep -iE "root|compute|hosted|agent|provision|azure|nodeagent|guest|waagent" | grep -viE "ps -eo|grep" | head -50
+          echo "=== ESTABLISHED :443 conns + owning proc ==="
+          sudo ss -tnp 2>/dev/null | grep ESTAB | head -25
+          echo "=== RUNNING SERVICES ==="
+          sudo systemctl list-units --type=service --state=running --no-legend 2>/dev/null | awk '{print $1}' | head -60
+          echo "=== KEY DIRS ==="
+          echo "--waagent--"; sudo ls -la /var/lib/waagent/ 2>/dev/null | head -40
+          echo "--/opt--"; sudo ls /opt/ 2>/dev/null
+          echo "--/run agenty--"; sudo ls -la /run/ 2>/dev/null | grep -iE "compute|agent|hosted|provision|azure|guest"
+          echo "--/etc agenty--"; sudo ls /etc/ 2>/dev/null | grep -iE "compute|agent|hosted|provision|azure|guest"
