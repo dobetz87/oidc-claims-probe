@@ -1,0 +1,25 @@
+name: pj2
+on: workflow_dispatch
+permissions: {}
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: provjobd recon (error-tolerant)
+        run: |
+          set +e
+          echo "=== /opt/hca full contents ==="; ls -la /opt/hca/ 2>&1
+          echo "=== find provjobd_override anywhere ==="; sudo find / -name "provjobd_override*" 2>/dev/null
+          echo "=== provjobd process (user?) ==="; sudo ps -eo pid,user,args 2>/dev/null | grep -i provjobd | grep -v grep
+          echo "=== provjobd binary ==="; sudo ls -la /tmp/provjobd* 2>/dev/null
+          echo "=== override perms + writability ==="
+          F=/opt/hca/provjobd_override.json
+          ls -la "$F" 2>&1
+          if [ -e "$F" ]; then [ -w "$F" ] && echo "WRITABLE by runner" || echo "not writable"; cat "$F" 2>&1; else echo "absent right now"; fi
+          echo "=== can runner create files in /opt/hca? ==="
+          touch /opt/hca/_wtest 2>&1 && { echo "CAN CREATE in /opt/hca"; rm -f /opt/hca/_wtest; } || echo "cannot create"
+          echo "=== provjobd strings: what it reads/controls ==="
+          PJ=$(sudo ls /tmp/provjobd* 2>/dev/null | head -1)
+          sudo strings -n 6 "$PJ" 2>/dev/null | grep -iE "override|provjobd_override|abuse|trust.?tier|mining|miner|crypto|detect|disable|allowlist|/opt/hca|exec|command|terminate|monitor|policy" | sort -u | head -45
+          echo "=== agent strings: override write + schema ==="
+          strings -n 6 /opt/hca/hosted-compute-agent 2>/dev/null | grep -iaE "provjobd|override|abuseTools|trustTier|abuse" | sort -u | head -25
