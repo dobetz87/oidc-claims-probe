@@ -1,0 +1,96 @@
+name: oidc-sweep
+on: workflow_dispatch
+permissions:
+  id-token: write
+jobs:
+  j0:
+    runs-on: ubuntu-latest
+    environment: "stg"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP base || $S"
+  j1:
+    runs-on: ubuntu-latest
+    environment: "stg "
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP trail_space || $S"
+  j2:
+    runs-on: ubuntu-latest
+    environment: " stg"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP lead_space || $S"
+  j3:
+    runs-on: ubuntu-latest
+    environment: "stg\t"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP tab || $S"
+  j4:
+    runs-on: ubuntu-latest
+    environment: "stg."
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP trail_dot || $S"
+  j5:
+    runs-on: ubuntu-latest
+    environment: "stg\u200b"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP zwsp || $S"
+  j6:
+    runs-on: ubuntu-latest
+    environment: "stg\u00a0"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP nbsp || $S"
+  j7:
+    runs-on: ubuntu-latest
+    environment: "STG"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP upper || $S"
+  j8:
+    runs-on: ubuntu-latest
+    environment: "cafe\u0301"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP nfd_cafe || $S"
+  j9:
+    runs-on: ubuntu-latest
+    environment: "caf\u00e9"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP nfc_cafe || $S"
+  j10:
+    runs-on: ubuntu-latest
+    environment: "a;b"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP semicolon || $S"
+  j11:
+    runs-on: ubuntu-latest
+    environment: "a@b"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP at || $S"
+  j12:
+    runs-on: ubuntu-latest
+    environment: "a#b"
+    steps:
+      - run: |
+          S=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=x" | python3 -c "import sys,json,base64;t=json.load(sys.stdin)[\"value\"].split(\".\")[1];t+=\"=\"*(-len(t)%4);print(json.loads(base64.urlsafe_b64decode(t))[\"sub\"])")
+          echo "SWEEP hash || $S"
