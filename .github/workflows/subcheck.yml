@@ -1,0 +1,16 @@
+name: subcheck
+on:
+  workflow_dispatch:
+    inputs:
+      env: { required: true, default: "p:q" }
+permissions: { id-token: write, contents: read }
+jobs:
+  mint:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    permissions: { id-token: write, contents: read }
+    steps:
+      - name: mint + decode sub
+        run: |
+          T=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=subcheck")
+          echo "$T" | python3 -c "import sys,json,base64;v=json.load(sys.stdin)['value'].split('.')[1];v+='='*(-len(v)%4);c=json.loads(base64.urlsafe_b64decode(v));print('INPUT_ENV=[${{ inputs.env }}]');print('SUB=',c.get('sub'));print('ENVIRONMENT_CLAIM=',repr(c.get('environment')));print('ISS=',c.get('iss'))"
