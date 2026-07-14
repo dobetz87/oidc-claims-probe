@@ -2,45 +2,36 @@ name: publish
 on:
   workflow_dispatch:
     inputs:
-      envname:
-        description: "env to publish under; 'none' = NO environment claim (downgrade test)"
+      mode:
+        description: "direct = npm publish (PUT route, hypothesis) ; stage = npm stage publish (POST /-/stage, control)"
         required: true
-        default: "p:q"
+        default: "stage"
 permissions:
   id-token: write
   contents: read
 jobs:
-  pub_env:
-    if: ${{ inputs.envname != 'none' }}
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.envname }}
-    permissions: { id-token: write, contents: read }
-    steps:
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', registry-url: 'https://registry.npmjs.org' }
-      - run: npm install -g npm@latest
-      - name: mint + publish (WITH environment)
-        run: |
-          T=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm")
-          echo "$T" | python3 -c "import sys,json,base64;v=json.load(sys.stdin)['value'].split('.')[1];v+='='*(-len(v)%4);c=json.loads(base64.urlsafe_b64decode(v));print('sub=',c.get('sub'));print('environment=',repr(c.get('environment')))"
-          mkdir -p /tmp/p
-          printf '{"name":"@dobetz/tp-probe","version":"0.3.%s","license":"MIT","repository":{"type":"git","url":"git+https://github.com/dobetz87/oidc-claims-probe.git"}}\n' "${{ github.run_id }}" > /tmp/p/package.json
-          echo "module.exports={};" > /tmp/p/index.js
-          npm publish /tmp/p --access public 2>&1 | tail -20
-  pub_noenv:
-    if: ${{ inputs.envname == 'none' }}
+  gate:
     runs-on: ubuntu-latest
     permissions: { id-token: write, contents: read }
     steps:
       - uses: actions/setup-node@v4
         with: { node-version: '22', registry-url: 'https://registry.npmjs.org' }
-      - run: npm install -g npm@latest
-      - name: mint + publish (NO environment claim) vs env-PINNED publisher = DOWNGRADE TEST
+      - run: npm install -g npm@latest && npm --version
+      - name: mint OIDC + decode claims (no token leak)
         run: |
           T=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm")
-          echo "$T" | python3 -c "import sys,json,base64;v=json.load(sys.stdin)['value'].split('.')[1];v+='='*(-len(v)%4);c=json.loads(base64.urlsafe_b64decode(v));print('sub=',c.get('sub'));print('environment=',repr(c.get('environment')),'(expect None/absent)')"
+          echo "$T" | python3 -c "import sys,json,base64;v=json.load(sys.stdin)['value'].split('.')[1];v+='='*(-len(v)%4);c=json.loads(base64.urlsafe_b64decode(v));print('sub=',c.get('sub'));print('job_workflow_ref=',c.get('job_workflow_ref'))"
+      - name: build pkg
+        run: |
           mkdir -p /tmp/p
-          printf '{"name":"@dobetz/tp-probe","version":"0.3.%s","license":"MIT","repository":{"type":"git","url":"git+https://github.com/dobetz87/oidc-claims-probe.git"}}\n' "${{ github.run_id }}" > /tmp/p/package.json
+          printf '{"name":"@dobetz/tp-probe","version":"0.4.%s","license":"MIT","repository":{"type":"git","url":"git+https://github.com/dobetz87/oidc-claims-probe.git"}}\n' "${{ github.run_id }}" > /tmp/p/package.json
           echo "module.exports={};" > /tmp/p/index.js
-          echo "=== publishing NO-ENV token against env-pinned (p:q) trusted publisher ==="
-          npm publish /tmp/p --access public 2>&1 | tail -20
+      - name: PUBLISH mode=${{ inputs.mode }}
+        run: |
+          if [ "${{ inputs.mode }}" = "direct" ]; then
+            echo "=== DIRECT publish (PUT) — hypothesis: REJECT under stage-only TP ==="
+            npm publish /tmp/p --access public 2>&1 | tail -30; echo "NPM_EXIT=${PIPESTATUS[0]}"
+          else
+            echo "=== STAGE publish (POST /-/stage) — control: ACCEPT under stage-only TP ==="
+            npm stage publish /tmp/p --access public 2>&1 | tail -30; echo "NPM_EXIT=${PIPESTATUS[0]}"
+          fi
